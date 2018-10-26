@@ -2,46 +2,29 @@
 """
 Created on Mon Oct  1 14:14:02 2018
 
-@author: lloyd
+@author: llyod
 """
 
 
 import numpy as np
 import cv2
 
-img = cv2.imread('testcar.jpg')
+
+img = cv2.imread('testcar2.jpg')
+#Convert to Grayscale
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-laplacian = cv2.Laplacian(gray, cv2.CV_64F)
-sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=5)
-sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=5)
-edges = cv2.Canny(gray, 75, 100, apertureSize = 3)
-lines = cv2.HoughLines(edges, 2, np.pi/180, 50)
-# =============================================================================
-#     cv2.imshow('gray',gray)
-#     cv2.imshow('laplacian', laplacian)
-#     cv2.imshow('sobelx', sobelx)
-#     cv2.imshow('sobely', sobely)
-# =============================================================================
-for rho,theta in lines[0]:
-    a = np.cos(theta)
-    b = np.sin(theta)
-    x0 = a*rho
-    y0 = b*rho
-    x1 = int(x0 + 1000*(-b))
-    y1 = int(y0 + 1000*(a))
-    x2 = int(x0 - 1000*(-b))
-    y2 = int(y0 - 1000*(a))
-    cv2.line(img,(x1,y1),(x2,y2),(0,0,200),2)
+#Gaussian Filter
+blur = cv2.GaussianBlur(gray, (5,5), 0)
+#Canny Edge Detector
+edges = cv2.Canny(blur, 75, 100, apertureSize = 3)
+#hough transform
+lines = cv2.HoughLinesP(edges, 1, np.pi/180, 60, maxLineGap= 45)
 
-cv2.imwrite('houghlines3.jpg', edges)
+#drawing lines on img
+for line in lines:
+    x1, y1, x2, y2 = line[0]
+    cv2.line(img,(x1,y1),(x2,y2),(0,0,255), 2)
 
-img2 = cv2.imread('testcar.jpg')
-gray2 = cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
-edges2 = cv2.Canny(gray2,50,150,apertureSize = 3)
-minLineLength = 1
-maxLineGap = 10
-lines = cv2.HoughLinesP(edges2,1,np.pi/180,100,minLineLength,maxLineGap)
-for x1,y1,x2,y2 in lines[0]:
-    cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
-
-cv2.imwrite('houghlines5.jpg',img)
+cv2.imwrite('houghlines3.jpg', img)
+cv2.imwrite('grayscaled.jpg', gray)
+cv2.imwrite('blurred edge.jpg', edges)
